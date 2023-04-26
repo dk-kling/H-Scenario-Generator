@@ -1,0 +1,8 @@
+numpy
+pygame
+scikit-fuzzy
+docker
+scipy
+shapely
+fastdtw~=0.3.4
+rich
