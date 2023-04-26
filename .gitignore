@@ -1,0 +1,5 @@
+.idea
+src/out-artifact/*
+src/seed-artifact/*
+carla/PythonAPI/carla/dist/*
+carla-autoware/*
