@@ -15,7 +15,7 @@ Install Python packages
 pip install -r requirements.txt
 ```
 
-## Build Carla
+## Build Carla PythonAPI
 
 Ref. https://carla.readthedocs.io/en/0.9.10/build_linux/
 
