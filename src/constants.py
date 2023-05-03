@@ -14,7 +14,6 @@ MAX_DIST_FROM_PLAYER = 40
 MIN_DIST_FROM_PLAYER = 5
 FRAME_RATE = 20
 INIT_SKIP_SECONDS = 2
-WAIT_AUTOWARE_NUM_TOPICS = 195
 
 # Actors
 NULL = -1  # special type for traction testing

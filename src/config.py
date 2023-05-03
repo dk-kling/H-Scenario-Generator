@@ -8,7 +8,7 @@ import shlex
 import socket
 import subprocess
 from datetime import datetime
-import console
+
 import constants as c
 
 
@@ -33,12 +33,12 @@ def set_carla_api_path():
     try:
         api_path = glob.glob(glob_path)[0]
     except IndexError:
-        console.error_log("Couldn't set Carla API path.")
+        print("Couldn't set Carla API path.")
         exit(-1)
 
     if api_path not in sys.path:
         sys.path.append(api_path)
-        console.info_log(f"API: {api_path}")
+        print(f"API: {api_path}")
 
 
 def handler(signum, frame):
@@ -60,13 +60,13 @@ def start_server(port, prev_process):
                 prev_process.terminate()
                 while prev_process.poll() is None:
                     time.sleep(0.1)
-                console.warn_log(f"[*] previous process kill server at port {port}")
+                print(f"{Bcolors.WARNING}[*] previous process kill server at port {port}{Bcolors.ENDC}")
                 subprocess.run(['fuser', '-k', str(port) + '/tcp'])
-                console.error_log(f"\n[-] previous process kill server at port {port}")
+                print(f"{Bcolors.FAIL}\n[-] previous process kill server at port {port}{Bcolors.ENDC}")
                 time.sleep(2)
             else:
                 subprocess.run(['fuser', '-k', str(port) + '/tcp'])
-                console.error_log(f"\n[-] kill server at port {port}")
+                print(f"{Bcolors.FAIL}\n[-] kill server at port {port}{Bcolors.ENDC}")
                 time.sleep(2)
         except:
             import traceback
@@ -74,7 +74,7 @@ def start_server(port, prev_process):
             continue
 
     process = subprocess.Popen(cmd_list)
-    console.info_log(f"[+] start server at port {port}")
+    print(f"{Bcolors.BLUE}[+] start server at port {port}{Bcolors.ENDC}")
     time.sleep(3)
     return process
 
@@ -90,7 +90,7 @@ def exit_handler(ports):
 
 def set_args():
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("-o", "--out-dir", default="output", type=str,
+    arg_parser.add_argument("-o", "--out-dir", default="out-artifact", type=str,
                             help="Directory to save fuzzing logs")
     arg_parser.add_argument("-s", "--seed-dir", default="seed", type=str,
                             help="Seed directory")
@@ -107,7 +107,7 @@ def set_args():
     arg_parser.add_argument("-p", "--sim-port", default=2000, type=int,
                             help="RPC port of Carla simulation server")
     arg_parser.add_argument("-t", "--target", default="behavior", type=str,
-                            help="Target autonomous driving system (behavior)")
+                            help="Target autonomous driving system (basic/behavior)")
     arg_parser.add_argument("-f", "--function", default="general", type=str,
                             choices=["general", "collision", "traction", "eval-os", "eval-us",
                                      "figure", "sens1", "sens2", "lat", "rear"],
@@ -145,7 +145,7 @@ def init(conf, args):
     else:
         conf.determ_seed = conf.cur_time
     random.seed(conf.determ_seed)
-    console.info_log(f"[info] determ seed set to: {conf.determ_seed}")
+    print(f"{Bcolors.WARNING}[info] determ seed set to: {conf.determ_seed}{Bcolors.ENDC}")
 
     """
     Make Directory for output files
@@ -157,9 +157,9 @@ def init(conf, args):
     try:
         os.mkdir(conf.out_dir)
     except Exception as e:
-        estr = f"Output directory {conf.out_dir} already exists. Remove with " \
-               f"caution; it might contain data from previous runs."
-        console.error_log(estr)
+        estr = f"{Bcolors.WARNING}Output directory {conf.out_dir} already exists. Remove with " \
+               f"caution; it might contain data from previous runs.{Bcolors.ENDC}"
+        print(estr)
         sys.exit(-1)
 
     """
@@ -171,9 +171,9 @@ def init(conf, args):
     try:
         os.mkdir(seed_dir)
     except Exception as e:
-        estr = f"Seed directory {args.seed_dir} already exists. Remove with " \
-               f"caution; it might contain data from previous runs."
-        console.error_log(estr)
+        estr = f"{Bcolors.WARNING}Seed directory {args.seed_dir} already exists. Remove with " \
+               f"caution; it might contain data from previous runs.{Bcolors.ENDC}"
+        print(estr)
         sys.exit(-1)
 
     if args.verbose:
@@ -219,7 +219,7 @@ def init(conf, args):
     elif args.target.lower() == "behavior":
         conf.agent_type = c.BEHAVIOR
     else:
-        console.error_log(f"[-] Unknown target: {args.target}")
+        print(f"{Bcolors.FAIL}[-] Unknown target: {args.target}{Bcolors.ENDC}")
         sys.exit(-1)
 
     conf.town = args.town
@@ -248,7 +248,7 @@ def init(conf, args):
     elif args.strategy == "trajectory":
         conf.strategy = c.TRAJECTORY
     else:
-        console.error_log(f"[-] Please specify a strategy")
+        print(f"{Bcolors.FAIL}[-] Please specify a strategy{Bcolors.ENDC}")
         exit(-1)
 
 
@@ -281,7 +281,7 @@ class Config:
         self.seed_dir = None
 
         # Target config
-        self.agent_type = c.AUTOWARE  # c.AUTOWARE
+        self.agent_type = c.BEHAVIOR
 
         # Enable/disable Various Checks
         self.check_dict = {
@@ -314,10 +314,22 @@ class Config:
         try:
             seed_scenarios = os.listdir(self.seed_dir)
         except:
-            console.error_log(f"[-] Error - cannot find seed directory ({self.seed_dir})")
+            print(f"{Bcolors.FAIL}[-] Error - cannot find seed directory ({self.seed_dir}){Bcolors.ENDC}")
             sys.exit(-1)
 
         queue = [seed for seed in seed_scenarios if not seed.startswith(".")
                  and seed.endswith(".json")]
 
         return queue
+
+
+class Bcolors:
+    VIOLET = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
