@@ -116,6 +116,8 @@ def set_args():
                             help="Input mutation strategy (all / congestion / entropy / instability / trajectory)")
     arg_parser.add_argument("--town", default=None, type=int,
                             help="Test on a specific town (e.g., '--town 3' forces Town03)")
+    arg_parser.add_argument("-x", "--user-defined-map", default=None, type=str,
+                            help="User defined xodr map name in directory, 'src/ScenaVRo/HDMap2RoadGraph/HD-Map'")
     arg_parser.add_argument("--timeout", default="20", type=int,
                             help="Seconds to timeout if vehicle is not moving")
     arg_parser.add_argument("--no-speed-check", action="store_true")
@@ -223,6 +225,7 @@ def init(conf, args):
         sys.exit(-1)
 
     conf.town = args.town
+    conf.user_defined_map = args.user_defined_map
 
     if args.no_speed_check:
         conf.check_dict["speed"] = False

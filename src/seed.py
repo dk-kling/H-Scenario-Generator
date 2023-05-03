@@ -42,11 +42,15 @@ class Seed:
         }
 
     def set_rgraph(self, client, conf):
-        if conf.town is not None:
+        if conf.user_defined_map is not None:
+            self.town_map = conf.user_defined_map
+            self.road_graph = RoadGraph(client, self.town_map, True)
+        elif conf.town is not None:
             self.town_map = "Town0{}".format(conf.town)
+            self.road_graph = RoadGraph(client, self.town_map)
         else:
-            self.town_map = "Town0{}".format(random.randint(1, 2))
-        self.road_graph = RoadGraph(client, self.town_map)
+            self.town_map = "Town0{}".format(random.randint(1, 5))
+            self.road_graph = RoadGraph(client, self.town_map)
 
     def rgraph_generate_scenario(self, conf):
         sp, dp = self.road_graph.get_lane_route()

@@ -23,19 +23,36 @@ def get_random_value(_list):
 
 class RoadGraph:
 
-    def __init__(self, client, hd_map_name):
-        client.load_world(hd_map_name)
-        time.sleep(3)
-        world = client.get_world()
-        carla_map = world.get_map()
-        xodr = carla_map.to_opendrive()
-        self.town_name = hd_map_name
+    def __init__(self, client, hd_map_name, user_defined=False):
+
         self.correct_spawn_locations_after_run = False
         self.lane_cov_list = []
 
+        if user_defined is False:
+            client.load_world(hd_map_name)
+            time.sleep(3)
+            world = client.get_world()
+            self.carla_map = world.get_map()
+            xodr = self.carla_map.to_opendrive()
+            self.town_name = hd_map_name
+
+        else:
+            hd_map = open("ScenaVRo/HDMap2RoadGraph/HD-Map/" + hd_map_name, 'r')
+            hd_map_str = hd_map.read()
+            self.town_name = user_defined
+            xodr = hd_map_str
+            hd_map.close()
+            client.generate_opendrive_world(xodr)
+            time.sleep(3)
+            world = client.get_world()
+            self.carla_map = world.get_map()
+
         # Generate road graph
         self.map_str, self.road_dict, self.junction_dict = self.gen_obj(xodr)
-        self.carla_map = carla.Map(self.town_name, self.map_str)
+
+        # while True:
+        #     print("-")
+        #     time.sleep(10)
 
     def gen_obj(self, hd_map_str):
         import xml.etree.ElementTree as ET

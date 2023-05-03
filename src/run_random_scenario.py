@@ -30,7 +30,7 @@ def main():
 
     conf.cur_scenario = scenario
     test_scenario = TestScenario(conf)
-    world = executor.switch_map(conf, test_scenario.town, client, world)
+    world = executor.switch_map(conf, test_scenario.town, client, world, seed)
     time.sleep(3)
     state = State()
     state.set_world(world)

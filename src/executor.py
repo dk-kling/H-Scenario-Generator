@@ -173,7 +173,7 @@ def connect(conf):
     return client, tm, world
 
 
-def switch_map(conf, town, client, world):
+def switch_map(conf, town, client, world, seed):
     """
     Switch map in the simulator and retrieve legitimate waypoints (a list of
     carla.Transform objects) in advance.
@@ -186,17 +186,23 @@ def switch_map(conf, town, client, world):
     try:
         # world = client.get_world()
         # if world.get_map().name != town: # force load every time
-        if conf.debug:
-            print("[*] Switching town to {} (slow)".format(town))
-        client.set_timeout(60)  # Handle sluggish loading bug
-        client.load_world(str(town))  # e.g., "/Game/Carla/Maps/Town01"
+        if conf.user_defined_map is None:
+            if conf.debug:
+                print("[*] Switching town to {} (slow)".format(town))
+            client.set_timeout(60)  # Handle sluggish loading bug
+            client.load_world(str(town))  # e.g., "/Game/Carla/Maps/Town01"
 
-        if conf.debug:
-            print("[+] Switched")
-        client.set_timeout(60)
+            if conf.debug:
+                print("[+] Switched")
+            client.set_timeout(60)
 
-        town_map = world.get_map()
-        list_spawn_points = town_map.get_spawn_points()
+            town_map = world.get_map()
+            list_spawn_points = town_map.get_spawn_points()
+        else:
+            if conf.debug:
+                print("[*] Switching town to {} (slow)".format(town))
+            client.set_timeout(60)  # Handle sluggish loading bug
+            client.generate_opendrive_world(seed.road_graph.map_str)
 
     except Exception as e:
         print(f"{Bcolors.FAIL}[-] Error: {e}{Bcolors.ENDC}")
