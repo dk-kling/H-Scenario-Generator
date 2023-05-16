@@ -16,6 +16,7 @@ class Seed:
         self.campaign_cnt = 0
         self.road_graph = None
         self.town_map = None
+        self.way = list()
 
     def new_campaign(self):
         self.scene_id += 1
@@ -53,7 +54,7 @@ class Seed:
             self.road_graph = RoadGraph(client, self.town_map)
 
     def rgraph_generate_scenario(self, conf):
-        sp, dp = self.road_graph.get_lane_route()
+        sp, dp, self.way = self.road_graph.get_lane_route()
         self.set_seed_dict(self.town_map, sp, dp)
 
         scene_name = "scene-created{}.json".format(self.scene_id)

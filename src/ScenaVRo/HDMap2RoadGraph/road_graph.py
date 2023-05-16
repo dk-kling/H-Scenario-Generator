@@ -227,7 +227,7 @@ class RoadGraph:
             sp = self.carla_map.get_waypoint_xodr(int(conn.prev_road), int(conn.prev_lane), sp_loc).transform
             dp = self.carla_map.get_waypoint_xodr(int(d_road_id), int(d_lane_id), dp_loc).transform
             break
-        return sp, dp
+        return sp, dp, [conn.prev_road, d_road_id, conn.next_road, conn.prev_lane, d_lane_id, conn.next_lane]
 
     class Junction:
         def __init__(self, j_id, child_road_dict, conn_list):
