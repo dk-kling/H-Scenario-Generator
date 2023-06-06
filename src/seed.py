@@ -5,7 +5,7 @@ import json
 
 import executor
 from config import Bcolors
-from ScenaVRo.HDMap2RoadGraph.road_graph import RoadGraph
+from ScenaVRo import RoadGraph, ScenarioArea
 
 
 class Seed:
@@ -17,6 +17,7 @@ class Seed:
         self.road_graph = None
         self.town_map = None
         self.way = list()
+        self.scenario_area = None
 
     def new_campaign(self):
         self.scene_id += 1
@@ -54,8 +55,9 @@ class Seed:
             self.road_graph = RoadGraph(client, self.town_map)
 
     def rgraph_generate_scenario(self, conf):
-        sp, dp, self.way = self.road_graph.get_lane_route()
-        self.set_seed_dict(self.town_map, sp, dp)
+
+        self.scenario_area = ScenarioArea(self.road_graph)
+        self.set_seed_dict(self.town_map, self.scenario_area.get_sp(), self.scenario_area.get_dp())
 
         scene_name = "scene-created{}.json".format(self.scene_id)
         with open(os.path.join(conf.seed_dir, scene_name), "w") as fp:
