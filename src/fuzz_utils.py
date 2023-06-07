@@ -249,6 +249,63 @@ class TestScenario:
             "dest_point": dest_point,
             "speed": speed,
             "maneuvers": maneuvers
+}
+        self.actors.append(new_actor)
+
+        return 0
+
+    def direct_add_actor(self, actor_type, nav_type, sp, dp, speed):
+        maneuvers = None
+
+        # do validity checks
+        if nav_type == c.MANEUVER:
+
+            # [direction (-1: L, 0: Fwd, 1: R),
+            #  velocity (m/s) if fwd / apex degree if lane change,
+            #  frame_maneuver_performed]
+            maneuvers = [
+                [0, 0, 0],
+                [0, 8, 0],
+                [0, 8, 0],
+                [0, 8, 0],
+                [0, 8, 0],
+            ]
+
+        elif nav_type == c.AUTOPILOT:
+
+            # prevent autopilot vehicles from being
+            # spawned beneath the player vehicle
+            sp.location.z = 1.5
+
+        spawn_point = (
+            (sp.location.x, sp.location.y, sp.location.z),
+            (sp.rotation.roll, sp.rotation.pitch, sp.rotation.yaw)
+        )
+
+        dest_point = (
+            (dp.location.x, dp.location.y, dp.location.z),
+            (dp.rotation.roll, dp.rotation.pitch, dp.rotation.yaw)
+        )
+
+        dist = self.get_distance_from_player(
+            get_carla_transform(spawn_point).location
+        )
+
+        if (dist > c.MAX_DIST_FROM_PLAYER):
+            # print("[-] too far from player: {}m".format(int(dist)))
+            return -1
+
+        elif (dist < c.MIN_DIST_FROM_PLAYER) and nav_type != c.MANEUVER:
+            # print("[-] too close to the player: {}m".format(int(dist)))
+            return -1
+
+        new_actor = {
+            "type": actor_type,
+            "nav_type": nav_type,
+            "spawn_point": spawn_point,
+            "dest_point": dest_point,
+            "speed": speed,
+            "maneuvers": maneuvers
         }
         self.actors.append(new_actor)
 
