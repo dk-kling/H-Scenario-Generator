@@ -26,10 +26,10 @@ def main():
     seed.set_rgraph(client, conf)
     seed.rgraph_generate_scenario(conf)
     scenario = seed.pop()
-    print(seed.seed_dict)
 
     conf.cur_scenario = scenario
     test_scenario = TestScenario(conf)
+
     world = executor.switch_map(conf, test_scenario.town, client, world, seed)
     time.sleep(3)
     state = State()
@@ -37,6 +37,12 @@ def main():
     state.campaign_cnt = 0
     state.cycle_cnt = 0
     state.mutation = 0
+
+    from object_generator import ObjectGenerator
+    object_generator = ObjectGenerator(world, seed)
+    for i in range(20):
+        object_generator.add_static()
+
     ret = test_scenario.run_test(state, client, tm, world)
 
     score_list = []
