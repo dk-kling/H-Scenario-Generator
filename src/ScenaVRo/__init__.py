@@ -1,4 +1,6 @@
 import random
+import numpy
+import math
 import time
 
 
@@ -13,14 +15,28 @@ class EmptyObject:
 class ScenarioArea:
     def __init__(self, road_graph):
         self.road_graph = road_graph
-        self.sp, self.dp, self.ego_ways, self.main_junc = road_graph.get_lane_route()
-        self.prev_ways, self.next_ways, self.adj_ways = self.road_graph.get_all_ways(self.main_junc)
+        sp, dp, ego_ways, main_junc = road_graph.get_lane_route()
+        prev_ways, next_ways, adj_ways = self.road_graph.get_all_ways(main_junc)
 
-        if (self.ego_ways[0], self.ego_ways[3]) in self.prev_ways:
-            self.prev_ways.remove((self.ego_ways[0], self.ego_ways[3]))
-        for i in range(2):
-            if (self.ego_ways[i], self.ego_ways[i + 3]) in self.adj_ways:
-                self.adj_ways.remove((self.ego_ways[i], self.ego_ways[i + 3]))
+        self.sp = sp
+        self.dp = dp
+        self.main_junc = main_junc
+        self.ego_st = {"road_id": ego_ways[0], "lane_id": ego_ways[3]}
+        self.ego_md = {"road_id": ego_ways[1], "lane_id": ego_ways[4]}
+        self.ego_ed = {"road_id": ego_ways[2], "lane_id": ego_ways[5]}
+        self.ego_ways = [self.ego_st, self.ego_md, self.ego_ed]
+        self.prev_ways = prev_ways
+        self.next_ways = next_ways
+        self.adj_ways = adj_ways
+
+        if self.ego_st in self.prev_ways:
+            self.prev_ways.remove(self.ego_st)
+        if self.ego_st in self.adj_ways:
+            self.adj_ways.remove(self.ego_st)
+        if self.ego_md in self.adj_ways:
+            self.adj_ways.remove(self.ego_md)
+        if self.ego_ed in self.adj_ways:
+            self.adj_ways.remove(self.ego_ed)
 
     def get_sp(self):
         return self.sp
@@ -33,16 +49,49 @@ class ScenarioArea:
         if sw in self.prev_ways:
             self.prev_ways.remove(sw)
         dw = get_random_value(self.next_ways)
-        sp = self.road_graph.carla_map.get_waypoint_xodr(int(sw[0]), int(sw[1]), random.random()).transform
-        dp = self.road_graph.carla_map.get_waypoint_xodr(int(dw[0]), int(dw[1]), random.random()).transform
+
+        sp = self.road_graph.carla_map.get_waypoint_xodr(
+            int(sw["road_id"]),
+            int(sw["lane_id"]),
+            self.road_graph.road_dict[sw["road_id"]].length * random.random()
+        ).transform
+
+        dp = self.road_graph.carla_map.get_waypoint_xodr(
+            int(dw["road_id"]),
+            int(dw["lane_id"]),
+            self.road_graph.road_dict[dw["road_id"]].length * random.random()
+        ).transform
+
         return sp, dp
 
     def get_npc_dynamic_linear_way(self):
-        return
+        overlap_w = random.choice(self.ego_ways)
+        overlap_p = self.road_graph.carla_map.get_waypoint_xodr(
+            int(overlap_w["road_id"]),
+            int(overlap_w["lane_id"]),
+            self.road_graph.road_dict[overlap_w["road_id"]].length * random.random()
+        )
+        available_lanes = self.road_graph.road_dict[overlap_w["road_id"]].child.values()
+        if overlap_w["lane_id"] in available_lanes:
+            available_lanes.remove(overlap_w["lane_id"])
+        sp = self.road_graph.carla_map.get_waypoint_xodr(
+            int(overlap_w["road_id"]),
+            int(random.choice(available_lanes)),
+            self.road_graph.road_dict[overlap_w["road_id"]].length * random.random()
+        )
+        yaw = math.degrees(numpy.arctan(overlap_p.loaction.x - sp.location.x, overlap_p.loaction.y - sp.location.y))
+        sp.rotation.yaw = yaw
+        return sp
 
-    def get_static_loc(self):
+    def get_static_location(self):
         adj_w = get_random_value(self.adj_ways)
-        adj_p = self.road_graph.carla_map.get_waypoint_xodr(int(adj_w[0]), int(adj_w[1]), random.random()).transform
+
+        adj_p = self.road_graph.carla_map.get_waypoint_xodr(
+            int(adj_w["road_id"]),
+            int(adj_w["lane_id"]),
+            self.road_graph.road_dict[adj_w["road_id"]].length * random.random()
+        ).transform
+
         return adj_p
 
 
@@ -272,9 +321,9 @@ class RoadGraph:
             road = self.get_road(road_id)
             lanes = road.child.values()
             for lane in lanes:
-                adj_ways.append((lane.parent, lane.id))
+                adj_ways.append({"road_id": lane.parent, "lane_id": lane.id})
                 if lane.type == "driving":
-                    all_ways.append((lane.parent, lane.id))
+                    all_ways.append({"road_id": lane.parent, "lane_id": lane.id})
         next_ways = [way for way in all_ways if way not in prev_ways]
         return prev_ways, next_ways, adj_ways
 
@@ -297,7 +346,7 @@ class RoadGraph:
             prev_ways = list()
             connected_roads = list()
             for c in self.connection:
-                prev_ways.append((c.prev_road, c.prev_lane))
+                prev_ways.append({"road_id": c.prev_road, "lane_id": c.prev_lane})
                 if c.prev_road not in connected_roads:
                     connected_roads.append(c.prev_road)
             return connected_roads, prev_ways
