@@ -39,9 +39,12 @@ def main():
     state.mutation = 0
 
     from object_generator import ObjectGenerator
-    object_generator = ObjectGenerator(world, seed)
+    object_generator = ObjectGenerator(world, seed, test_scenario)
     for i in range(20):
         object_generator.add_static()
+    for i in range(20):
+        object_generator.add_linear_pedestrian()
+    test_scenario = object_generator.update_pedestrians()
 
     ret = test_scenario.run_test(state, client, tm, world)
 

@@ -254,8 +254,15 @@ class TestScenario:
 
         return 0
 
-    def direct_add_actor(self, actor_type, nav_type, sp, dp, speed):
+    def direct_add_actor(self, actor_type, nav_type, sp, dp, speed, bp):
         maneuvers = None
+
+        spawn_point = (
+            (sp.location.x, sp.location.y, sp.location.z),
+            (sp.rotation.roll, sp.rotation.pitch, sp.rotation.yaw)
+        )
+
+        dest_point = None
 
         # do validity checks
         if nav_type == c.MANEUVER:
@@ -277,27 +284,22 @@ class TestScenario:
             # spawned beneath the player vehicle
             sp.location.z = 1.5
 
-        spawn_point = (
-            (sp.location.x, sp.location.y, sp.location.z),
-            (sp.rotation.roll, sp.rotation.pitch, sp.rotation.yaw)
-        )
+            dest_point = (
+                (dp.location.x, dp.location.y, dp.location.z),
+                (dp.rotation.roll, dp.rotation.pitch, dp.rotation.yaw)
+            )
 
-        dest_point = (
-            (dp.location.x, dp.location.y, dp.location.z),
-            (dp.rotation.roll, dp.rotation.pitch, dp.rotation.yaw)
-        )
-
-        dist = self.get_distance_from_player(
-            get_carla_transform(spawn_point).location
-        )
-
-        if (dist > c.MAX_DIST_FROM_PLAYER):
-            # print("[-] too far from player: {}m".format(int(dist)))
-            return -1
-
-        elif (dist < c.MIN_DIST_FROM_PLAYER) and nav_type != c.MANEUVER:
-            # print("[-] too close to the player: {}m".format(int(dist)))
-            return -1
+        # dist = self.get_distance_from_player(
+        #     get_carla_transform(spawn_point).location
+        # )
+        #
+        # if (dist > c.MAX_DIsST_FROM_PLAYER):
+        #     # print("[-] too far from player: {}m".format(int(dist)))
+        #     return -1
+        #
+        # elif (dist < c.MIN_DIST_FROM_PLAYER) and nav_type != c.MANEUVER:
+        #     # print("[-] too close to the player: {}m".format(int(dist)))
+        #     return -1
 
         new_actor = {
             "type": actor_type,
@@ -305,7 +307,8 @@ class TestScenario:
             "spawn_point": spawn_point,
             "dest_point": dest_point,
             "speed": speed,
-            "maneuvers": maneuvers
+            "maneuvers": maneuvers,
+            "blueprint": bp
         }
         self.actors.append(new_actor)
 

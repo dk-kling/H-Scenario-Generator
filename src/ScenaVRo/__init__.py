@@ -22,8 +22,8 @@ class ScenarioArea:
         self.dp = dp
         self.main_junc = main_junc
         self.ego_st = {"road_id": ego_ways[0], "lane_id": ego_ways[3]}
-        self.ego_md = {"road_id": ego_ways[1], "lane_id": ego_ways[4]}
-        self.ego_ed = {"road_id": ego_ways[2], "lane_id": ego_ways[5]}
+        self.ego_ed = {"road_id": ego_ways[1], "lane_id": ego_ways[4]}
+        self.ego_md = {"road_id": ego_ways[2], "lane_id": ego_ways[5]}
         self.ego_ways = [self.ego_st, self.ego_md, self.ego_ed]
         self.prev_ways = prev_ways
         self.next_ways = next_ways
@@ -65,22 +65,35 @@ class ScenarioArea:
         return sp, dp
 
     def get_npc_dynamic_linear_way(self):
-        overlap_w = random.choice(self.ego_ways)
+        overlap_w = random.choice([self.ego_st, self.ego_ed])
+
+        # try:
+        length = self.road_graph.road_dict[overlap_w["road_id"]].length
+        available = list(self.road_graph.road_dict[overlap_w["road_id"]].child.keys())
+
+        # except KeyError:
+        #     length = self.main_junc.find_road(overlap_w["road_id"]).length
+        #     available = list(self.main_junc.find_road(overlap_w["road_id"]).child.keys())
+
         overlap_p = self.road_graph.carla_map.get_waypoint_xodr(
             int(overlap_w["road_id"]),
             int(overlap_w["lane_id"]),
-            self.road_graph.road_dict[overlap_w["road_id"]].length * random.random()
-        )
-        available_lanes = self.road_graph.road_dict[overlap_w["road_id"]].child.values()
-        if overlap_w["lane_id"] in available_lanes:
-            available_lanes.remove(overlap_w["lane_id"])
+            length * random.random()
+        ).transform
+
+        if overlap_w["lane_id"] in available:
+            available.remove(overlap_w["lane_id"])
+
         sp = self.road_graph.carla_map.get_waypoint_xodr(
             int(overlap_w["road_id"]),
-            int(random.choice(available_lanes)),
-            self.road_graph.road_dict[overlap_w["road_id"]].length * random.random()
-        )
-        yaw = math.degrees(numpy.arctan(overlap_p.loaction.x - sp.location.x, overlap_p.loaction.y - sp.location.y))
+            int(random.choice(available)),
+            length * random.random()
+        ).transform
+
+        radian_yaw = math.atan2(overlap_p.location.x - sp.location.x, overlap_p.location.y - sp.location.y)
+        yaw = math.degrees(radian_yaw)
         sp.rotation.yaw = yaw
+        sp.location.z += 2
         return sp
 
     def get_static_location(self):
@@ -332,6 +345,9 @@ class RoadGraph:
             self.id = j_id
             self.child = child_road_dict
             self.connection = conn_list
+
+        def find_road(self, road_id):
+            return self.child[road_id]
 
         def find_prev_lane(self, road_id):
             for conn in self.connection:
